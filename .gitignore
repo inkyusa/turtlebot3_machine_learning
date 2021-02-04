@@ -103,4 +103,4 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-save_model/
+turtlebot3_dqn/save_model/
