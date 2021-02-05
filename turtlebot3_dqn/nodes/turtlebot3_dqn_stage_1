@@ -39,6 +39,10 @@ class ReinforceAgent():
     def __init__(self, state_size, action_size):
         self.pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
         self.dirPath = os.path.dirname(os.path.realpath(__file__))
+        self.modelSavePath = self.dirPath.replace('turtlebot3_dqn/nodes', 'turtlebot3_dqn/save_model')
+        if not os.path.exists(self.modelSavePath):
+            os.mkdir(self.modelSavePath)
+            print("create {}".format(self.modelSavePath))
         self.dirPath = self.dirPath.replace('turtlebot3_dqn/nodes', 'turtlebot3_dqn/save_model/stage_1_')
         self.result = Float32MultiArray()
 
@@ -142,7 +146,7 @@ class ReinforceAgent():
         self.model.fit(X_batch, Y_batch, batch_size=self.batch_size, epochs=1, verbose=0)
 
 if __name__ == '__main__':
-    rospy.init_node('turtlebot3_dqn_stage_1')
+    rospy.init_node('turtlebot3_dqn_stage_1', log_level=rospy.INFO)
     pub_result = rospy.Publisher('result', Float32MultiArray, queue_size=5)
     pub_get_action = rospy.Publisher('get_action', Float32MultiArray, queue_size=5)
     result = Float32MultiArray()
