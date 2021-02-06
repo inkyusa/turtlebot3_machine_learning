@@ -91,7 +91,6 @@ class Env():
 
         obstacle_min_range = round(min(scan_range), 2)
         obstacle_angle = np.argmin(scan_range)
-        print("min(scan_range) = ", min(scan_range))
         if min_range > min(scan_range) > 0:
             done = True
 
