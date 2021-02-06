@@ -104,3 +104,6 @@ venv.bak/
 .mypy_cache/
 
 turtlebot3_dqn/save_model/
+*.h5
+
+*.json

@@ -28,6 +28,8 @@ from std_srvs.srv import Empty
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from respawnGoal import Respawn
 
+
+
 class Env():
     def __init__(self, action_size):
         self.goal_x = 0
@@ -43,6 +45,11 @@ class Env():
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
         self.respawn_goal = Respawn()
+        self.actionType = ['FAST_LEFT', 'LEFT', 'FRONT', 'RIGHT', 'FAST_RIGHT']
+        self.forwards_reward = 5
+        self.turning_reward = 1
+        
+
 
     def getGoalDistace(self):
         goal_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y), 2)
@@ -86,7 +93,7 @@ class Env():
             done = True
 
         current_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y),2)
-        if current_distance < 0.2:
+        if current_distance <= 0.25:
             self.get_goalbox = True
 
         return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
@@ -111,6 +118,15 @@ class Env():
 
         reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
 
+        #print (self.actionType[action])
+
+        if not done:
+            if self.actionType[action] == "FORWARD":
+                reward += self.forwards_reward
+            else:
+                reward += self.turning_reward
+
+
         if done:
             rospy.loginfo("Collision!!")
             reward = -500
@@ -128,8 +144,10 @@ class Env():
 
 
     def step(self, action):
-        max_angular_vel = 1.5
-        ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5
+        max_angular_vel = 1.5 * 0.5 #rad/s
+        
+        # discritised action (e.g., action is the value in range of 0- 4: 0 indicates rapid left turn whereas 1 is slower left turn and 2 is front.
+        ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel
 
         vel_cmd = Twist()
         vel_cmd.linear.x = 0.15
