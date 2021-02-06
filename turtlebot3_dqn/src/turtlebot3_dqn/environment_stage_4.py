@@ -45,7 +45,7 @@ class Env():
         self.unpause_proxy = rospy.ServiceProxy('gazebo/unpause_physics', Empty)
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
         self.respawn_goal = Respawn()
-        self.actionType = ['FAST_LEFT', 'LEFT', 'FRONT', 'RIGHT', 'FAST_RIGHT']
+        self.actionType = ['FAST_LEFT', 'LEFT', 'FORWARD', 'RIGHT', 'FAST_RIGHT']
         self.forwards_reward = 5
         self.turning_reward = 1
         
@@ -76,12 +76,14 @@ class Env():
     def getState(self, scan):
         scan_range = []
         heading = self.heading
-        min_range = 0.13
+        #min_range = 0.13
+        min_range = 0.2
         done = False
 
         for i in range(len(scan.ranges)):
             if scan.ranges[i] == float('Inf'):
-                scan_range.append(3.5)
+                #scan_range.append(3.5)
+                scan_range.append(5.0)
             elif np.isnan(scan.ranges[i]):
                 scan_range.append(0)
             else:
@@ -89,6 +91,7 @@ class Env():
 
         obstacle_min_range = round(min(scan_range), 2)
         obstacle_angle = np.argmin(scan_range)
+        print("min(scan_range) = ", min(scan_range))
         if min_range > min(scan_range) > 0:
             done = True
 
@@ -118,7 +121,6 @@ class Env():
 
         reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
 
-        #print (self.actionType[action])
 
         if not done:
             if self.actionType[action] == "FORWARD":
