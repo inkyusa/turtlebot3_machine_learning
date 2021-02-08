@@ -107,3 +107,5 @@ turtlebot3_dqn/save_model/
 *.h5
 
 *.json
+
+*.zip

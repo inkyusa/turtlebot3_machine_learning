@@ -46,7 +46,7 @@ class Env():
         self.pause_proxy = rospy.ServiceProxy('gazebo/pause_physics', Empty)
         self.respawn_goal = Respawn()
         self.actionType = ['FAST_LEFT', 'LEFT', 'FORWARD', 'RIGHT', 'FAST_RIGHT']
-        self.forwards_reward = 5
+        self.forwards_reward = 2
         self.turning_reward = 1
         
 
@@ -96,6 +96,7 @@ class Env():
 
         current_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y),2)
         if current_distance <= 0.25:
+        #if current_distance < 0.2:
             self.get_goalbox = True
 
         return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
@@ -124,8 +125,8 @@ class Env():
         if not done:
             if self.actionType[action] == "FORWARD":
                 reward += self.forwards_reward
-            else:
-                reward += self.turning_reward
+            # else:
+            #     reward += self.turning_reward
 
 
         if done:
@@ -135,7 +136,7 @@ class Env():
 
         if self.get_goalbox:
             rospy.loginfo("Goal!!")
-            reward = 1000
+            reward = 2000
             self.pub_cmd_vel.publish(Twist())
             self.goal_x, self.goal_y = self.respawn_goal.getPosition(True, delete=True)
             self.goal_distance = self.getGoalDistace()
@@ -145,10 +146,10 @@ class Env():
 
 
     def step(self, action):
-        max_angular_vel = 1.5 * 0.5 #rad/s
+        max_angular_vel = 1.5 
         
         # discritised action (e.g., action is the value in range of 0- 4: 0 indicates rapid left turn whereas 1 is slower left turn and 2 is front.
-        ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel
+        ang_vel = ((self.action_size - 1)/2 - action) * max_angular_vel * 0.5 #rad/s
 
         vel_cmd = Twist()
         vel_cmd.linear.x = 0.15

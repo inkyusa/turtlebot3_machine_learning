@@ -46,6 +46,8 @@ class ReinforceAgent():
         self.dirPath = self.dirPath.replace('turtlebot3_dqn/nodes', 'turtlebot3_dqn/save_model/stage_4_')
         self.result = Float32MultiArray()
 
+        self.cnt_timeout = 0
+
         self.load_model = False
         self.load_episode = 0
         self.state_size = state_size
@@ -191,6 +193,12 @@ if __name__ == '__main__':
 
             if t >= 500:
                 rospy.loginfo("Time out!!")
+                agent.cnt_timeout = agent.cnt_timeout + 1
+                if (agent.cnt_timeout > 2):
+                    rospy.loginfo("Multiple time out!! regenerate goal")
+                    agent.cnt_timeout = 0
+                    env.respawn_goal.getPosition(position_check = True, delete=True)
+                    time.sleep(0.5)
                 done = True
 
             if done:
