@@ -47,7 +47,8 @@ class Env():
         self.respawn_goal = Respawn()
         self.actionType = ['FAST_LEFT', 'LEFT', 'FORWARD', 'RIGHT', 'FAST_RIGHT']
         self.forwards_reward = 2
-        self.turning_reward = 1
+        self.turning_reward = -1
+        self.collision_cnt = 0
         
 
 
@@ -77,6 +78,7 @@ class Env():
         scan_range = []
         heading = self.heading
         #min_range = 0.13
+        #min_range = 0.17
         min_range = 0.2
         done = False
 
@@ -95,8 +97,12 @@ class Env():
             done = True
 
         current_distance = round(math.hypot(self.goal_x - self.position.x, self.goal_y - self.position.y),2)
-        if current_distance <= 0.25:
-        #if current_distance < 0.2:
+        # rospy.loginfo("current_distance = %f",current_distance)
+        # rospy.loginfo(" self.position.x = %f", self.position.x)
+        # rospy.loginfo(" self.position.y = %f", self.position.y)
+        # rospy.loginfo(" self.goal_x = %f", self.goal_x)
+        # rospy.loginfo(" self.goal_y = %f", self.goal_y)
+        if current_distance <= (0.25 + 0.1):
             self.get_goalbox = True
 
         return scan_range + [heading, current_distance, obstacle_min_range, obstacle_angle], done
@@ -119,24 +125,32 @@ class Env():
         else:
             ob_reward = 0
 
-        reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
+        #reward = ((round(yaw_reward[action] * 5, 2)) * distance_rate) + ob_reward
+        reward = ((round(yaw_reward[action] * 10, 2)) * distance_rate) + ob_reward
 
 
         if not done:
             if self.actionType[action] == "FORWARD":
                 reward += self.forwards_reward
-            # else:
-            #     reward += self.turning_reward
+            else:
+                reward += self.turning_reward
 
 
         if done:
-            rospy.loginfo("Collision!!")
+            if self.collision_cnt >= 5:
+                rospy.loginfo("Too many collisions for this goal, respawning goal!!")
+                self.collision_cnt = 0
+                self.respawn_goal.getPosition(True, delete=True)
+            else:
+                rospy.loginfo("Collision!!")
+                self.collision_cnt = self.collision_cnt + 1
             reward = -500
             self.pub_cmd_vel.publish(Twist())
 
         if self.get_goalbox:
             rospy.loginfo("Goal!!")
             reward = 2000
+            self.collision_cnt = 0
             self.pub_cmd_vel.publish(Twist())
             self.goal_x, self.goal_y = self.respawn_goal.getPosition(True, delete=True)
             self.goal_distance = self.getGoalDistace()
