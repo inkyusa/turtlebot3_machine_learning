@@ -140,7 +140,7 @@ class Env():
             if self.collision_cnt >= 5:
                 rospy.loginfo("Too many collisions for this goal, respawning goal!!")
                 self.collision_cnt = 0
-                self.respawn_goal.getPosition(True, delete=True)
+                self.goal_x, self.goal_y = self.respawn_goal.getPosition(position_check=True, delete=True)
             else:
                 rospy.loginfo("Collision!!")
                 self.collision_cnt = self.collision_cnt + 1
